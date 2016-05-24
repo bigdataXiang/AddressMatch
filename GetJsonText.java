@@ -22,14 +22,82 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.svail.geotext.GeoQuery;
 import com.svail.util.FileTool;
+import com.svail.util.LongUrlToShort;
 import com.svail.util.ReadJson;
+import com.svail.util.Tool;
+
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 public class GetJsonText {
 	
 	public static void main(String[] args) {
-		jsonAddressMatch("D:/百度_代码+试运行结果/生态文明体制改革领导机构-delectRedundancy.txt");
+		//jsonAddressMatch("D:/百度_代码+试运行结果/0524/生态文明建设成果/生态文明建设成果-delectRedundancy_NullException.txt");
+		exportJson("D:/百度_代码+试运行结果/0524/生态文明建设项目工程/生态文明建设项目-delectRedundancy_result.txt");
+	}
+	
+	public static void exportJson(String file) {
+		
+		Vector<String> rds = FileTool.Load(file, "UTF-8");
+		
+		JSONObject root = new JSONObject();
+		
+		root.put("type", "FeatureCollection");
+		
+		ArrayList<JSONObject> features = new ArrayList<JSONObject>();
+		
+		for (int n = 0; n < rds.size(); n ++) {
+			
+			/*txtc = "{ \"type\":\"Feature\", \"geometry\": {\"type\":\"Point\", \"coordinates\":[" + lng[0] + "," + lng[1] + "]},\"properties\": {\"Title\":\""+ title+"\""
+				+  ",\"href\":\"" +shorturl+ "\",\"time\":\"" + jsonObjectTemp.getString("time").replace("-", "").replace(" ", "")
+				+ "\",\"abstract\":\"" + abs+ "\",\"region\":\"" + Admin + "\"}}";
+			*/
+			/*txtc = "<TTTLE>" + title + "</TITLE>" + "<URL>" + shorturl + "</URL>" + "<ABS>" + abs + "</ABS>" + "<TIME>" + time + "</TIME>" +
+				"<LNG>" + lng[0] + "</LNG>" + "<LAT>" + lng[1] + "</LAT>" + "<REGION>" + Admin + "</REGION>";*/
+			
+			JSONObject obj = new JSONObject();
+			obj.put("type", "Feature");
+			
+			String ref = rds.get(n);
+			
+			String title=Tool.getStrByKey(ref, "<TTTLE>", "</TITLE>", "</TITLE>");
+			
+			JSONObject prop = new JSONObject();
+			prop.put("title", title.replace("\"", "\\\""));
+			
+			String URL=Tool.getStrByKey(ref, "<URL>", "</URL>", "</URL>");
+			prop.put("href", URL);
+			
+			String ABS=Tool.getStrByKey(ref, "<ABS>", "</ABS>", "</ABS>");
+			prop.put("abs", ABS.replace("\"", "\\\""));
+
+			String TIME=Tool.getStrByKey(ref, "<TIME>", "</TIME>", "</TIME>");
+			prop.put("time", TIME);
+			
+			String REGION=Tool.getStrByKey(ref, "<REGION>", "</REGION>", "</REGION>");
+			prop.put("region", REGION);
+		
+			obj.put("properties", prop);
+			
+			JSONObject geom = new JSONObject();
+			double coord[] = {Double.parseDouble(Tool.getStrByKey(ref, "<LNG>", "</LNG>", "</LNG>")),
+					Double.parseDouble(Tool.getStrByKey(ref, "<LAT>", "</LAT>", "</LAT>"))};
+			
+			// "geometry\": {\"type\":\"Point\", \"coordinates\":[" + lng[0] + "," + lng[1] + "]}
+			geom.put("type", "Point");
+			
+			geom.put("coordinates", coord);
+			
+			obj.put("geometry", geom);
+			System.out.println(obj);
+			features.add(obj);
+			
+		}
+		root.put("features", features);
+		System.out.println(root);
+		
+		FileTool.Dump(root.toString(), "D:/百度_代码+试运行结果/0524/生态文明建设项目工程/生态文明建设项目-Result.json", "UTF-8");//file.replace(".txt", "")+"-json.json"
+		
 	}
 	public static void jsonAddressMatch(String file){
 
@@ -51,12 +119,12 @@ public class GetJsonText {
 		
 		String txtc = "{ \"type\": \"FeatureCollection\", \"features\": [";
 		
-		FileTool.Dump(txtc, file.replace(".txt", "") + "_result.json", "UTF-8");
+		// FileTool.Dump(txtc, file.replace(".txt", "") + "_result.json", "UTF-8");
 		
 		int cnt = 0;
 		for (int k = 0; k < pois.size(); k++) {
 			if (batch) {
-				String poi1=pois.elementAt(k);
+				String poi1=pois.elementAt(k).replace("},", "}");
 				JSONObject jsonObject =JSONObject.fromObject(poi1);
 				String address=(String) jsonObject.get("Title");
 				validpois.add(poi1);
@@ -163,12 +231,21 @@ public class GetJsonText {
 														
 														
 														JSONObject jsonObjectTemp =JSONObject.fromObject(poitemp);
+														String longurl=jsonObjectTemp.getString("href");
+														String shorturl=LongUrlToShort.createShortUrl(longurl);
+														String title=jsonObjectTemp.getString("Title").replace("\"", "");
+														String abs=jsonObjectTemp.getString("abstract").replace("-", "").replace("\"", "");
+														String time = jsonObjectTemp.getString("time").replace("-", "").replace(" ", "");
+														/*txtc = "{ \"type\":\"Feature\", \"geometry\": {\"type\":\"Point\", \"coordinates\":[" + lng[0] + "," + lng[1] + "]},\"properties\": {\"Title\":\""+ title+"\""
+															+  ",\"href\":\"" +shorturl+ "\",\"time\":\"" + jsonObjectTemp.getString("time").replace("-", "").replace(" ", "")
+															+ "\",\"abstract\":\"" + abs+ "\",\"region\":\"" + Admin + "\"}}";
+														*/
+														txtc = "<TTTLE>" + title + "</TITLE>" + "<URL>" + shorturl + "</URL>" + "<ABS>" + abs + "</ABS>" + "<TIME>" + time + "</TIME>" +
+																"<LNG>" + lng[0] + "</LNG>" + "<LAT>" + lng[1] + "</LAT>" + "<REGION>" + Admin + "</REGION>";
 														
-														txtc = "{ \"type\":\"Feature\", \"geometry\": {\"type\":\"Point\", \"coordinates\":[" + lng[0] + "," + lng[1] + "]},\"properties\": {\"Title\":\""+ java.net.URLEncoder.encode(jsonObjectTemp.getString("Title"), "UTF-8")+"\""
-															+  ",\"href\":\"" + jsonObjectTemp.getString("href") + "\",\"time\":\"" + jsonObjectTemp.getString("time")
-															+ "\",\"region\":\"" + Admin + "\"}}";
+														FileTool.Dump(txtc, file.replace(".txt", "") + "_result.txt", "UTF-8");
 														
-														if (cnt == 0)
+														/*if (cnt == 0)
 														{
 															FileTool.Dump(txtc, file.replace(".txt", "") + "_result.json", "UTF-8");
 															cnt = 1;
@@ -177,7 +254,7 @@ public class GetJsonText {
 														{
 															FileTool.Dump("," + txtc, file.replace(".txt", "") + "_result.json", "UTF-8");
 															
-														}
+														}*/
 													}
 													else
 													{
@@ -228,9 +305,9 @@ public class GetJsonText {
 		}
 
 		
-		txtc = "]};";
+		// txtc = "]};";
 				
-		FileTool.Dump(txtc, file.replace(".txt", "") + "_result.json", "UTF-8");
+		// FileTool.Dump(txtc, file.replace(".txt", "") + "_result.json", "UTF-8");
 		//jsonObjectTemp.toString()
 		//System.out.println(poi);
 		
