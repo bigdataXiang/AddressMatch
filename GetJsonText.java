@@ -33,43 +33,35 @@ public class GetJsonText {
 	
 	public static void main(String[] args) {
 		//step-1：将所有子文件合成一个总文件
-		//mergeFile("D:/百度_代码+试运行结果/baiduCrawl/","chengguo");
+		//mergeFile("D:/baidu/chengguo/","chengguo");
+		// D:/baidu/lingdaoxiaozu/
+		// D:/baidu/tizhigaige/
+		//D:/baidu/fangan/
+		//D:/baidu/chengguo/
 		
 		//step-2:将合成的总文件进行去冗余处理
-		//Tool.delectRedundancy("");
+		//Tool.delectRedundancy("D:/baidu/lingdaoxiaozu/lingdaoxiaozu-Result-delectRedundancy.txt");
 		
 		//step-3:将数据进行地理编码处理
-		//jsonAddressMatch("D:/百度_代码+试运行结果/0524/生态文明建设成果/生态文明建设成果-delectRedundancy_NullException.txt");
+		//jsonAddressMatch("D:/baidu/chengguo/chengguo-Result-delectRedundancy_NullException.txt");
 		
 		//step-4：将地理编码处理后的数据转换成json格式
-		//exportJson("D:/百度_代码+试运行结果/0524/生态文明建设项目工程/生态文明建设项目-delectRedundancy_result.txt");
+		exportJson("D:/baidu/lingdaoxiaozu/lingdaoxiaozu-Total.txt");
 		
 	}
 	public static void mergeFile(String path,String type){
-		String[] names={"鼓楼区",
-				"云龙区",
-				"贾汪区",
-				"泉山区",
-				"铜山区",
-				"丰县",
-				"沛县",
-				"睢宁县",
-				"新沂市",
-				"邳州市",
-				"常州市",
-				"天宁区",
-				"钟楼区",
-				"戚墅堰区"};
-		//String path="D:/百度_代码+试运行结果/baiduCrawl/";
+		String[] names={};
 		String folder="";
 		for(int k=0;k<names.length;k++){
 			String county=names[k];
 			folder=path+county+".json";
 			Vector<String> file=FileTool.Load(folder, "utf-8");
-			for(int i=0;i<file.size();i++){
-				System.out.println(file.elementAt(i));
-				FileTool.Dump(file.elementAt(i), path+type+"-Result.txt", "utf-8");
-			}								
+			if(file!=null){
+				for(int i=0;i<file.size();i++){
+					System.out.println(file.elementAt(i));
+					FileTool.Dump(file.elementAt(i), path+type+"-Result.txt", "utf-8");
+				}	
+			}										
 		}
 		
 	}
@@ -98,21 +90,21 @@ public class GetJsonText {
 			
 			String ref = rds.get(n);
 			
-			String title=Tool.getStrByKey(ref, "<TTTLE>", "</TITLE>", "</TITLE>");
+			String title=Tool.getStrByKey(ref, "<TTTLE>", "</TITLE>", "</TITLE>").replace(" ", "").replace("\r\n", "").replace("\t", "").replace("\n", "");
 			
 			JSONObject prop = new JSONObject();
 			prop.put("title", title.replace("\"", "\\\""));
 			
-			String URL=Tool.getStrByKey(ref, "<URL>", "</URL>", "</URL>");
+			String URL=Tool.getStrByKey(ref, "<URL>", "</URL>", "</URL>").replace(" ", "").replace("\r\n", "").replace("\t", "").replace("\n", "");
 			prop.put("href", URL);
 			
-			String ABS=Tool.getStrByKey(ref, "<ABS>", "</ABS>", "</ABS>");
+			String ABS=Tool.getStrByKey(ref, "<ABS>", "</ABS>", "</ABS>").replace(" ", "").replace("\r\n", "").replace("\t", "").replace("\n", "");
 			prop.put("abs", ABS.replace("\"", "\\\""));
 
-			String TIME=Tool.getStrByKey(ref, "<TIME>", "</TIME>", "</TIME>");
+			String TIME=Tool.getStrByKey(ref, "<TIME>", "</TIME>", "</TIME>").replace(" ", "").replace("\r\n", "").replace("\t", "").replace("\n", "");
 			prop.put("time", TIME);
 			
-			String REGION=Tool.getStrByKey(ref, "<REGION>", "</REGION>", "</REGION>");
+			String REGION=Tool.getStrByKey(ref, "<REGION>", "</REGION>", "</REGION>").replace(" ", "").replace("\r\n", "").replace("\t", "").replace("\n", "");
 			prop.put("region", REGION);
 		
 			obj.put("properties", prop);
@@ -127,14 +119,14 @@ public class GetJsonText {
 			geom.put("coordinates", coord);
 			
 			obj.put("geometry", geom);
-			System.out.println(obj);
+			System.out.println(n);
 			features.add(obj);
 			
 		}
 		root.put("features", features);
-		System.out.println(root);
+		//System.out.println();
 		
-		FileTool.Dump(root.toString(), "D:/百度_代码+试运行结果/0524/生态文明建设项目工程/生态文明建设项目-Result.json", "UTF-8");//file.replace(".txt", "")+"-json.json"
+		FileTool.Dump(root.toString(), file.replace(".txt", "")+"-json.json", "UTF-8");//file.replace(".txt", "")+"-json.json"
 		
 	}
 	public static void jsonAddressMatch(String file){
@@ -155,7 +147,7 @@ public class GetJsonText {
 		
 		Vector<String> pois = FileTool.Load(file, "utf-8");
 		
-		String txtc = "{ \"type\": \"FeatureCollection\", \"features\": [";
+		String txtc ="";
 		
 		// FileTool.Dump(txtc, file.replace(".txt", "") + "_result.json", "UTF-8");
 		
@@ -164,7 +156,16 @@ public class GetJsonText {
 			if (batch) {
 				String poi1=pois.elementAt(k).replace("},", "}");
 				JSONObject jsonObject =JSONObject.fromObject(poi1);
-				String address=(String) jsonObject.get("Title");
+				//"Title":["2013调研成果一等奖"],"abstract":"
+				String sub=jsonObject.toString().replace("[", "").replace("]", "");
+				int bb=sub.indexOf("Title\":\"")+"\"Title\":\"".length();
+				int ee=sub.indexOf("\",\"abstract\"");
+				String temp=sub.substring(bb,ee);//\", \"abstract\"
+				jsonObject =JSONObject.fromObject(sub);
+				String address="";
+				if(temp.indexOf("\"")==-1){
+					address=(String) jsonObject.get("Title");
+				}				
 				validpois.add(poi1);
 				count ++;
 				sb.append(address).append("\n");
@@ -270,7 +271,7 @@ public class GetJsonText {
 														
 														JSONObject jsonObjectTemp =JSONObject.fromObject(poitemp);
 														String longurl=jsonObjectTemp.getString("href");
-														String shorturl=LongUrlToShort.createShortUrl(longurl);
+														//String shorturl=LongUrlToShort.createShortUrl(longurl);
 														String title=jsonObjectTemp.getString("Title").replace("\"", "");
 														String abs=jsonObjectTemp.getString("abstract").replace("-", "").replace("\"", "");
 														String time = jsonObjectTemp.getString("time").replace("-", "").replace(" ", "");
@@ -278,7 +279,7 @@ public class GetJsonText {
 															+  ",\"href\":\"" +shorturl+ "\",\"time\":\"" + jsonObjectTemp.getString("time").replace("-", "").replace(" ", "")
 															+ "\",\"abstract\":\"" + abs+ "\",\"region\":\"" + Admin + "\"}}";
 														*/
-														txtc = "<TTTLE>" + title + "</TITLE>" + "<URL>" + shorturl + "</URL>" + "<ABS>" + abs + "</ABS>" + "<TIME>" + time + "</TIME>" +
+														txtc = "<TTTLE>" + title + "</TITLE>" + "<URL>" + longurl + "</URL>" + "<ABS>" + abs + "</ABS>" + "<TIME>" + time + "</TIME>" +
 																"<LNG>" + lng[0] + "</LNG>" + "<LAT>" + lng[1] + "</LAT>" + "<REGION>" + Admin + "</REGION>";
 														
 														FileTool.Dump(txtc, file.replace(".txt", "") + "_result.txt", "UTF-8");
