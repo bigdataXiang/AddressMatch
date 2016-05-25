@@ -32,8 +32,46 @@ import net.sf.json.JSONObject;
 public class GetJsonText {
 	
 	public static void main(String[] args) {
+		//step-1：将所有子文件合成一个总文件
+		//mergeFile("D:/百度_代码+试运行结果/baiduCrawl/","chengguo");
+		
+		//step-2:将合成的总文件进行去冗余处理
+		//Tool.delectRedundancy("");
+		
+		//step-3:将数据进行地理编码处理
 		//jsonAddressMatch("D:/百度_代码+试运行结果/0524/生态文明建设成果/生态文明建设成果-delectRedundancy_NullException.txt");
-		exportJson("D:/百度_代码+试运行结果/0524/生态文明建设项目工程/生态文明建设项目-delectRedundancy_result.txt");
+		
+		//step-4：将地理编码处理后的数据转换成json格式
+		//exportJson("D:/百度_代码+试运行结果/0524/生态文明建设项目工程/生态文明建设项目-delectRedundancy_result.txt");
+		
+	}
+	public static void mergeFile(String path,String type){
+		String[] names={"鼓楼区",
+				"云龙区",
+				"贾汪区",
+				"泉山区",
+				"铜山区",
+				"丰县",
+				"沛县",
+				"睢宁县",
+				"新沂市",
+				"邳州市",
+				"常州市",
+				"天宁区",
+				"钟楼区",
+				"戚墅堰区"};
+		//String path="D:/百度_代码+试运行结果/baiduCrawl/";
+		String folder="";
+		for(int k=0;k<names.length;k++){
+			String county=names[k];
+			folder=path+county+".json";
+			Vector<String> file=FileTool.Load(folder, "utf-8");
+			for(int i=0;i<file.size();i++){
+				System.out.println(file.elementAt(i));
+				FileTool.Dump(file.elementAt(i), path+type+"-Result.txt", "utf-8");
+			}								
+		}
+		
 	}
 	
 	public static void exportJson(String file) {
